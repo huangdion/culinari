@@ -9,8 +9,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/Ionicons";
-import { Link, router, useFocusEffect } from "expo-router";
-import BottomNav from "./components/bottomnav";
+import {  router, useFocusEffect } from "expo-router";
 
 type Meal = {
   idMeal: string;
@@ -22,7 +21,6 @@ type Meal = {
 export default function Bookmarks() {
   const [bookmarkedMeals, setBookmarkedMeals] = React.useState<Meal[]>([]);
 
-  // Menggunakan useFocusEffect untuk memuat ulang bookmark setiap kali halaman difokus
   useFocusEffect(
     React.useCallback(() => {
       loadBookmarks();
@@ -116,7 +114,7 @@ export default function Bookmarks() {
           contentContainerStyle={styles.listContainer}
         />
       )}
-      <BottomNav />
+      
     </View>
   );
 }

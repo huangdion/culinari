@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  FlatList,
-  ActivityIndicator,
-  Text,
-  StyleSheet,
-} from "react-native";
+import { View, FlatList, Text, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Icon from "react-native-vector-icons/Ionicons"; // Mengimpor Icon
-
+import Icon from "react-native-vector-icons/Ionicons";
+import axios from "axios";
 import MenuCard from "./components/MenuCard";
 import SearchBar from "./components/SearchBar";
 import SearchHistory from "./components/SearchHistory";
-import ButtonNav from "./components/bottomnav";
 import { router } from "expo-router";
 
 export default function Index() {
@@ -20,29 +13,30 @@ export default function Index() {
   const [filteredMenu, setFilteredMenu] = useState([]);
   const [menu, setMenu] = useState([]);
   const [searchHistory, setSearchHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
 
+  // Fetch menu data and search history on mount
   useEffect(() => {
-    fetchRecipes();
-    loadSearchHistory();
+    const fetchInitialData = async () => {
+      fetchRecipes();
+      loadSearchHistory();
+    };
+    fetchInitialData();
   }, []);
 
+
   const fetchRecipes = async () => {
-    setLoading(true); // Mengatur loading menjadi true saat mulai mem-fetch data
     try {
-      const response = await fetch(
+      const response = await axios.get(
         "https://www.themealdb.com/api/json/v1/1/search.php?s="
       );
-      const data = await response.json();
-      if (data.meals) {
-        setMenu(data.meals);
+      if (response.data.meals) {
+        setMenu(response.data.meals);
       }
     } catch (error) {
       console.error("Failed to fetch recipes:", error);
-    } finally {
-      setLoading(false); // Setel loading menjadi false setelah pemanggilan selesai
     }
   };
+  
 
   const loadSearchHistory = async () => {
     try {
@@ -82,9 +76,9 @@ export default function Index() {
     router.push({ pathname: "/detail/[id]", params: { id } });
   };
 
-  const renderRecipeItem = ({ item }) => {
-    return <MenuCard item={item} navigateToDetail={navigateToDetail} />;
-  };
+  const renderRecipeItem = ({ item }) => (
+    <MenuCard item={item} navigateToDetail={navigateToDetail} />
+  );
 
   return (
     <View style={styles.container}>
@@ -102,13 +96,7 @@ export default function Index() {
           setSearchHistory([]);
         }}
       />
-      {loading ? (
-        <ActivityIndicator
-          style={styles.loading}
-          size="large"
-          color="#FF6B6B"
-        />
-      ) : searchText.length > 0 ? (
+      {searchText.length > 0 ? (
         filteredMenu.length > 0 ? (
           <FlatList
             data={filteredMenu}
@@ -120,12 +108,10 @@ export default function Index() {
         ) : (
           <View style={styles.noResultsContainer}>
             <Icon name="search" size={64} color="#ccc" />
-            <Text style={styles.noResults}>Tidak ada resep yang ditemukan</Text>
+            <Text style={styles.noResults}>No available recipe</Text>
           </View>
         )
       ) : null}
-
-      <ButtonNav />
     </View>
   );
 }
@@ -133,7 +119,6 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   listContainer: { padding: 16 },
-  loading: { flex: 1, justifyContent: "center", alignItems: "center" },
   noResultsContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   noResults: { fontSize: 16, color: "#666", marginTop: 16 },
 });

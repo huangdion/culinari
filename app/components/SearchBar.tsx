@@ -7,7 +7,7 @@ export default function SearchBar({ searchText, onSearch, onClear, onSubmit }) {
     <View style={styles.searchContainer}>
       <Icon name="search-outline" size={20} color="#666" style={styles.searchIcon} />
       <TextInput
-        placeholder="Cari Resep"
+        placeholder="Find some recipe.."
         style={styles.searchBar}
         value={searchText}
         onChangeText={onSearch}

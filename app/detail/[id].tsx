@@ -10,35 +10,34 @@ import {
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import BottomNav from "../components/bottomnav";
 import Icon from "react-native-vector-icons/Ionicons";
+import axios from "axios";
 
 export default function Detail() {
   const { id } = useLocalSearchParams();
-  const [meal, setMeal] = useState(null);
+  const [meal, setMeal] = useState({});
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [ingredients, setIngredients] = useState([]);
 
   useEffect(() => {
     const fetchMeal = async () => {
       try {
-        const response = await fetch(
+        const response = await axios.get(
           `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`
         );
-        const data = await response.json();
-        if (data.meals) {
-          setMeal(data.meals[0]);
-          // Extract ingredients and measurements
-          const ingredientList = [];
-          for (let i = 1; i <= 20; i++) {
-            const ingredient = data.meals[0][`strIngredient${i}`];
-            const measure = data.meals[0][`strMeasure${i}`];
-            if (ingredient && ingredient.trim() !== "") {
-              ingredientList.push({ ingredient, measure });
-            }
+        const mealData = response.data.meals[0];
+        setMeal(mealData);
+
+        // Extract ingredients and measurements
+        const ingredientList = [];
+        for (let i = 1; i <= 25; i++) {
+          const ingredient = mealData[`strIngredient${i}`];
+          const measure = mealData[`strMeasure${i}`];
+          if (ingredient && ingredient.trim() !== "") {
+            ingredientList.push({ ingredient, measure });
           }
-          setIngredients(ingredientList);
         }
+        setIngredients(ingredientList);
       } catch (error) {
         console.error("Error fetching meal detail:", error);
         Alert.alert("Error", "Failed to load recipe details");
@@ -82,14 +81,6 @@ export default function Detail() {
     }
   };
 
-  if (!meal) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.mainContainer}>
       <ScrollView style={styles.container}>
@@ -118,7 +109,7 @@ export default function Detail() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ingrediets</Text>
+            <Text style={styles.sectionTitle}>Ingredients</Text>
             <View style={styles.ingredientsContainer}>
               {ingredients.map((item, index) => (
                 <View key={index} style={styles.ingredientItem}>
@@ -137,7 +128,6 @@ export default function Detail() {
           </View>
         </View>
       </ScrollView>
-      <BottomNav />
     </View>
   );
 }
@@ -226,10 +216,5 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F9FA",
     padding: 12,
     borderRadius: 8,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });

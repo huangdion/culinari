@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import BottomNav from "../components/bottomnav";
-import MenuCard from '../components/MenuCard'; // Import MenuCard component
+import MenuCard from '../components/MenuCardT'; // Import MenuCard component
+import axios from 'axios';
 
 type Meal = {
   idMeal: string;
@@ -22,24 +22,24 @@ export default function KategoriPage() {
     fetchMeals();
   }, [category]);
 
-  const fetchMeals = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        `https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`
-      );
-      const data = await response.json();
-      if (data.meals) {
-        setMeals(data.meals);
-      }
-    } catch (error) {
-      console.error(`Failed to fetch meals for category ${category}:`, error);
-      setError('Failed to load recipes. Please try again later.');
-    } finally {
-      setLoading(false);
+
+const fetchMeals = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await axios.get(
+      `https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`
+    );
+    if (response.data.meals) {
+      setMeals(response.data.meals);
     }
-  };
+  } catch (error) {
+    console.error(`Failed to fetch meals for category ${category}:`, error);
+    setError("Failed to load recipes. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const navigateToDetail = (id: string) => {
     router.push({
@@ -75,7 +75,7 @@ export default function KategoriPage() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{category} Recipes</Text>
-        <Text style={styles.subtitle}>{meals.length} recipes found</Text>
+        <Text style={styles.subtitle}>{meals.length} Recipes found</Text>
       </View>
 
       <FlatList
@@ -85,7 +85,6 @@ export default function KategoriPage() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
       />
-      <BottomNav />
     </View>
   );
 }

@@ -1,32 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router';
-import BottomNav from './components/bottomnav'; // Import BottomNav component
+import axios from 'axios';
 
 export default function App() {
   const [menu, setMenu] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  // Fetch popular recipes from API
   const fetchRecipes = async () => {
     try {
-      const response = await fetch("https://www.themealdb.com/api/json/v1/1/search.php?s=");
-      const data = await response.json();
-      if (data.meals) {
-        setMenu(data.meals);
+      const response = await axios.get(
+        "https://www.themealdb.com/api/json/v1/1/search.php?s="
+      );
+      if (response.data.meals) {
+        setMenu(response.data.meals);
       }
     } catch (error) {
       console.error("Failed to fetch recipes:", error);
     }
   };
-
-  // Fetch categories from API
+  
   const fetchCategories = async () => {
     try {
-      const response = await fetch("https://www.themealdb.com/api/json/v1/1/categories.php");
-      const data = await response.json();
-      if (data.categories) {
-        setCategories(data.categories);
+      const response = await axios.get(
+        "https://www.themealdb.com/api/json/v1/1/categories.php"
+      );
+      if (response.data.categories) {
+        setCategories(response.data.categories);
       }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
@@ -40,53 +40,54 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {/* Scrollable content */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Header Section */}
-        <View style={styles.headbox}>
-          <Text style={styles.head}>What Recipe Are You Looking for Today?</Text>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Culinari</Text>
+          <Text style={styles.headerSubtitle}>Discover Delicious Recipes</Text>
         </View>
 
-        {/* Popular Recipes Section */}
-        <View style={styles.menuContainer}>
-          <Text style={styles.menuTitle}>Popular Recipes</Text>
-          <ScrollView horizontal style={styles.menuScroll}>
-            {menu.slice(0, 5).map((item, index) => (
-              <Link key={index} href={{ pathname: '/detail/[id]', params: { id: item.idMeal } }}>
-                <View style={styles.menuCard}>
-                  <Image source={{ uri: item.strMealThumb }} style={styles.menuImage} />
-                  <Text style={styles.menuText}>{item.strMeal}</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Popular Recipes</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {menu.slice(0, 10).map((item, index) => (
+              <Link 
+                key={index} 
+                href={{ pathname: '/detail/[id]', params: { id: item.idMeal } }}
+                style={styles.recipeCard}
+              >
+                <Image 
+                  source={{ uri: item.strMealThumb }} 
+                  style={styles.recipeImage} 
+                />
+                <View style={styles.recipeOverlay}>
+                  <Text style={styles.recipeTitle} numberOfLines={2}>
+                    {item.strMeal}
+                  </Text>
                 </View>
               </Link>
             ))}
           </ScrollView>
         </View>
 
-        {/* Categories Section */}
-        <View style={styles.kategoriContainer}>
-          <Text style={styles.kategoriTitle}>Categories</Text>
-          <View style={styles.kategoriGrid}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recipe Categories</Text>
+          <View style={styles.categoryGrid}>
             {categories.map((category, index) => (
               <Link
                 key={index}
                 href={{ pathname: '/menu/[category]', params: { category: category.strCategory } }}
-                asChild
+                style={styles.categoryItem}
               >
-                <TouchableOpacity style={styles.kategoriItem}>
-                  <Image 
-                    source={{ uri: category.strCategoryThumb || 'https://via.placeholder.com/100' }} 
-                    style={styles.kategoriImage} 
-                  />
-                  <Text style={styles.kategoriLabel}>{category.strCategory}</Text>
-                </TouchableOpacity>
+                <Image 
+                  source={{ uri: category.strCategoryThumb }} 
+                  style={styles.categoryImage} 
+                />
+                <Text style={styles.categoryLabel}>{category.strCategory}</Text>
               </Link>
             ))}
           </View>
         </View>
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <BottomNav />
     </View>
   );
 }
@@ -94,117 +95,94 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-    position: "relative",
+    backgroundColor: '#F7F7F7',
   },
   scrollContainer: {
-    paddingBottom: 60,  // Adding padding to make room for BottomNav
+    paddingBottom: 20,
   },
-  headbox: {
-    flexDirection: "row",
-    backgroundColor: "#F6E6C2",
-    height: 100,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-    borderBottomWidth: 3,
-    borderBottomColor: "#ddd",
+  header: {
+    backgroundColor: '#F6E6C2',
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    alignItems: 'center',
   },
-  head: {
-    fontSize: 30,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "#333",
-  },
-  menuContainer: {
-    padding: 20,
-    marginBottom: 20,
-  },
-  menuTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#2C3E50',
     marginBottom: 10,
-    color: "#333",
   },
-  menuScroll: {
-    flexDirection: 'row',
+  headerSubtitle: {
+    fontSize: 18,
+    color: '#7F8C8D',
   },
-  menuCard: {
+  section: {
+    marginTop: 25,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#2C3E50',
+    marginBottom: 15,
+  },
+  recipeCard: {
     width: 200,
     height: 250,
-    marginRight: 20,
+    marginRight: 15,
     borderRadius: 15,
     overflow: 'hidden',
-    backgroundColor: '#fff',
-    elevation: 4,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 5 },
-  },
-  menuImage: {
-    width: '100%',
-    height: 150,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-  },
-  menuText: {
-    fontSize: 16,
-    padding: 10,
-    textAlign: "center",
-    color: "#333",
-    fontWeight: "bold",
-  },
-  kategoriContainer: {
-    padding: 20,
-    marginBottom: 20,
-  },
-  kategoriTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#333",
-  },
-  kategoriGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  kategoriItem: {
-    alignItems: "center",
-    width: "30%",
-    marginBottom: 20,
-    borderRadius: 10,
-    overflow: 'hidden',
-    elevation: 2,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    shadowOffset: { width: 0, height: 5 },
+    elevation: 3,
   },
-  kategoriImage: {
-    width: "100%",
-    height: 100,
-    borderRadius: 10,
+  recipeImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
   },
-  kategoriLabel: {
-    fontSize: 16,
-    textAlign: "center",
-    paddingVertical: 10,
-    color: "#333",
-  },
-  bottomNav: {
+  recipeOverlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
   },
+  recipeTitle: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  categoryItem: {
+    width: '30%',
+    marginBottom: 15,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    backgroundColor: 'white',
+  },
+  categoryImage: {
+    width: '100%',
+    height: 100,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  categoryLabel: {
+    textAlign: 'center',
+    padding: 10,
+    fontWeight: '600',
+    color: '#2C3E50',
+  }
 });

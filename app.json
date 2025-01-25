@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Culinari",
-    "slug": "Culinari",
+    "slug": "culinari-recipe",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,7 +15,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.huangdiion.culinarirecipe"
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +37,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "4c34470c-df4e-4adb-9a3a-f7fa22dd7c60"
+      }
+    },
+    "owner": "huangdiion"
   }
 }
