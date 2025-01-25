@@ -8,9 +8,9 @@ export default function SearchHistory({ history, onSelect, onClear }) {
   return (
     <View style={styles.historyContainer}>
       <View style={styles.historyHeader}>
-        <Text style={styles.historyTitle}>Riwayat Pencarian</Text>
+        <Text style={styles.historyTitle}>Search History</Text>
         <TouchableOpacity onPress={onClear}>
-          <Text style={styles.clearHistoryText}>Hapus</Text>
+          <Text style={styles.clearHistoryText}>Delete</Text>
         </TouchableOpacity>
       </View>
       {history.map((term, index) => (
