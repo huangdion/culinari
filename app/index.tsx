@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Image, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import axios from 'axios';
 
+type Meal = {
+  idMeal: string;
+  strMeal: string;
+  strMealThumb: string;
+  strCategory?: string;
+};
+
+type Category = {
+  strCategory: string;
+  strCategoryThumb: string;
+};
+
 export default function App() {
-  const [menu, setMenu] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [menu, setMenu] = useState<Meal[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const fetchRecipes = async () => {
     try {
@@ -19,7 +31,7 @@ export default function App() {
       console.error("Failed to fetch recipes:", error);
     }
   };
-  
+
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
@@ -46,13 +58,14 @@ export default function App() {
           <Text style={styles.headerSubtitle}>Discover Delicious Recipes</Text>
         </View>
 
+        {/* Popular Recipes Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Popular Recipes</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {menu.slice(0, 10).map((item, index) => (
+            {menu.slice(0, 10).map((item) => (
               <Link 
-                key={index} 
-                href={{ pathname: '/detail/[id]', params: { id: item.idMeal } }}
+                key={item.idMeal} 
+                href={`/detail/${item.idMeal}`} 
                 style={styles.recipeCard}
               >
                 <Image 
@@ -69,13 +82,14 @@ export default function App() {
           </ScrollView>
         </View>
 
+        {/* Recipe Categories Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recipe Categories</Text>
           <View style={styles.categoryGrid}>
-            {categories.map((category, index) => (
+            {categories.map((category) => (
               <Link
-                key={index}
-                href={{ pathname: '/menu/[category]', params: { category: category.strCategory } }}
+                key={category.strCategory}
+                href={`/menu/${category.strCategory}`}
                 style={styles.categoryItem}
               >
                 <Image 
@@ -92,6 +106,7 @@ export default function App() {
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -163,7 +178,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   categoryItem: {
-    width: '30%',
+    width: '32%', // Adjusted for better spacing
     marginBottom: 15,
     borderRadius: 10,
     shadowColor: '#000',
@@ -172,6 +187,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
     backgroundColor: 'white',
+    alignItems: 'center',
   },
   categoryImage: {
     width: '100%',
@@ -186,3 +202,4 @@ const styles = StyleSheet.create({
     color: '#2C3E50',
   }
 });
+

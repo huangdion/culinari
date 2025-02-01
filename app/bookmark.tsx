@@ -1,15 +1,8 @@
-import React from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-} from "react-native";
+import React, { useCallback } from "react";
+import { View, FlatList, StyleSheet, Image } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Icon from "react-native-vector-icons/Ionicons";
-import {  router, useFocusEffect } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
+import { Card, Text, IconButton, List } from "react-native-paper";
 
 type Meal = {
   idMeal: string;
@@ -18,103 +11,65 @@ type Meal = {
   strCategory?: string;
 };
 
+const BookmarkItem = ({ item, onRemove }: { item: Meal; onRemove: (id: string) => void }) => (
+  <Card style={styles.mealItem}>
+    <Link href={`/detail/${item.idMeal}`} asChild>
+      <Card.Content style={styles.mealContainer}>
+        <Image source={{ uri: item.strMealThumb }} style={styles.mealImage} />
+        <View style={styles.mealInfo}>
+          <Text variant="titleMedium">{item.strMeal}</Text>
+          {item.strCategory && <Text variant="bodySmall" style={styles.categoryText}>{item.strCategory}</Text>}
+        </View>
+        <IconButton icon="trash-can-outline" iconColor="#FF6B6B" size={20} onPress={() => onRemove(item.idMeal)} />
+      </Card.Content>
+    </Link>
+  </Card>
+);
+
 export default function Bookmarks() {
   const [bookmarkedMeals, setBookmarkedMeals] = React.useState<Meal[]>([]);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      loadBookmarks();
-    }, [])
-  );
-
-  const loadBookmarks = async () => {
+  const loadBookmarks = useCallback(async () => {
     try {
       const bookmarks = await AsyncStorage.getItem("bookmarks");
-      if (bookmarks) {
-        setBookmarkedMeals(JSON.parse(bookmarks));
-      }
+      setBookmarkedMeals(bookmarks ? JSON.parse(bookmarks) : []);
     } catch (error) {
       console.error("Error loading bookmarks:", error);
     }
-  };
+  }, []);
 
-  const removeBookmark = async (idMeal: string) => {
+  useFocusEffect(useCallback(() => {
+    loadBookmarks();
+  }, [loadBookmarks]));
+
+  const handleRemove = useCallback(async (idMeal: string) => {
     try {
-      const updatedBookmarks = bookmarkedMeals.filter(
-        (meal) => meal.idMeal !== idMeal
-      );
-      await AsyncStorage.setItem(
-        "bookmarks",
-        JSON.stringify(updatedBookmarks)
-      );
-      setBookmarkedMeals(updatedBookmarks);
+      const updated = bookmarkedMeals.filter(meal => meal.idMeal !== idMeal);
+      await AsyncStorage.setItem("bookmarks", JSON.stringify(updated));
+      setBookmarkedMeals(updated);
     } catch (error) {
       console.error("Error removing bookmark:", error);
     }
-  };
-
-  const navigateToDetail = (id: string) => {
-    router.push({
-      pathname: "/detail/[id]",
-      params: { id },
-    });
-  };
-
-  const renderItem = ({ item }: { item: Meal }) => (
-    <View style={styles.mealItem}>
-      <TouchableOpacity
-        style={styles.mealContainer}
-        onPress={() => navigateToDetail(item.idMeal)}
-      >
-        <Image source={{ uri: item.strMealThumb }} style={styles.mealImage} />
-        <View style={styles.mealInfo}>
-          <Text style={styles.mealTitle}>{item.strMeal}</Text>
-          {item.strCategory && (
-            <Text style={styles.categoryText}>{item.strCategory}</Text>
-          )}
-        </View>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            onPress={() => navigateToDetail(item.idMeal)}
-            style={styles.detailButton}
-          >
-            <Icon name="chevron-forward" size={24} color="#666" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => removeBookmark(item.idMeal)}
-            style={styles.deleteButton}
-          >
-            <Icon name="trash-bin-outline" size={24} color="#FF6B6B" />
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
+  }, [bookmarkedMeals]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Icon name="bookmark" size={24} color="#FF6B6B" />
-        <Text style={styles.header}>Saved Recipe</Text>
-      </View>
-
-      {bookmarkedMeals.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Icon name="book-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyText}>
-            There's nothing to see here.{"\n"}Start saving your favorite recipes
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={bookmarkedMeals}
-          keyExtractor={(item) => item.idMeal}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-        />
-      )}
-      
+      <List.Subheader>Saved Recipes</List.Subheader>
+      <FlatList
+        data={bookmarkedMeals}
+        keyExtractor={(item) => item.idMeal}
+        renderItem={({ item }) => <BookmarkItem item={item} onRemove={handleRemove} />}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <IconButton icon="book-outline" size={64} iconColor="#e0e0e0" />
+            <Text variant="bodyMedium" style={styles.emptyText}>
+              There's nothing to see here. Start saving your favorite recipes.
+            </Text>
+          </View>
+        }
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   );
 }
@@ -122,82 +77,40 @@ export default function Bookmarks() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
   },
-  headerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  header: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginLeft: 8,
-    color: "#333",
-  },
-  listContainer: {
+  listContent: {
+    flexGrow: 1,
     padding: 16,
   },
   mealItem: {
     marginBottom: 16,
-    backgroundColor: "#fff",
     borderRadius: 12,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   mealContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
   },
   mealImage: {
-    width: 60,
-    height: 60,
+    width: 56,
+    height: 56,
     borderRadius: 8,
+    marginRight: 16,
   },
   mealInfo: {
     flex: 1,
-    marginLeft: 12,
-  },
-  mealTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 4,
   },
   categoryText: {
-    fontSize: 14,
-    color: "#666",
+    color: "#666666",
   },
-  actionButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  detailButton: {
-    padding: 8,
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  emptyContainer: {
+  emptyState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 32,
+    padding: 32,
   },
   emptyText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#666",
     textAlign: "center",
-    lineHeight: 24,
+    marginTop: 16,
   },
 });

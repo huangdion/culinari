@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 
-export default function Detail() {
+export default function MealDetail() {
   const { id } = useLocalSearchParams();
   const [meal, setMeal] = useState({});
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -28,9 +28,8 @@ export default function Detail() {
         const mealData = response.data.meals[0];
         setMeal(mealData);
 
-        // Extract ingredients and measurements
         const ingredientList = [];
-        for (let i = 1; i <= 25; i++) {
+        for (let i = 1; i <= 35; i++) {
           const ingredient = mealData[`strIngredient${i}`];
           const measure = mealData[`strMeasure${i}`];
           if (ingredient && ingredient.trim() !== "") {
@@ -39,7 +38,7 @@ export default function Detail() {
         }
         setIngredients(ingredientList);
       } catch (error) {
-        console.error("Error fetching meal detail:", error);
+        console.error("Error fetching meal details:", error);
         Alert.alert("Error", "Failed to load recipe details");
       }
     };
@@ -67,17 +66,17 @@ export default function Detail() {
 
       if (isBookmarked) {
         bookmarkedMeals = bookmarkedMeals.filter((meal) => meal.idMeal !== id);
-        Alert.alert("Resep Dihapus", "Resep telah dihapus dari bookmark");
+        Alert.alert("Bookmark Removed", "Recipe has been removed from bookmarks");
       } else {
         bookmarkedMeals.push(meal);
-        Alert.alert("Resep Disimpan", "Resep telah ditambahkan ke bookmark");
+        Alert.alert("Bookmark Added", "Recipe has been added to bookmarks");
       }
 
       await AsyncStorage.setItem("bookmarks", JSON.stringify(bookmarkedMeals));
       setIsBookmarked(!isBookmarked);
     } catch (error) {
       console.error("Error toggling bookmark:", error);
-      Alert.alert("Error", "Gagal menyimpan bookmark");
+      Alert.alert("Error", "Failed to update bookmark");
     }
   };
 
@@ -123,7 +122,7 @@ export default function Detail() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>How to Cook</Text>
+            <Text style={styles.sectionTitle}>Instructions</Text>
             <Text style={styles.instructions}>{meal.strInstructions}</Text>
           </View>
         </View>

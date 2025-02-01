@@ -1,32 +1,40 @@
 import React from "react";
-import { TouchableOpacity, Text, Image, View, StyleSheet } from "react-native";
+import { Text, Image, View, StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
+import { Link } from "expo-router";
 
-export default function MenuCard({ item, navigateToDetail }) {
+export default function MenuCard({
+  item,
+}: {
+  item: {
+    idMeal: string;
+    strMealThumb: string;
+    strMeal: string;
+    strCategory: string;
+    strArea: string;
+  };
+}) {
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigateToDetail(item.idMeal)}
-      activeOpacity={0.7}
-    >
-      <Image source={{ uri: item.strMealThumb }} style={styles.image} />
-      <View style={styles.textContainer}>
-        <Text style={styles.title}>{item.strMeal}</Text>
+    <Link href={`/detail/${item.idMeal}`} asChild>
+      <View style={styles.card}>
+        <Image source={{ uri: item.strMealThumb }} style={styles.image} />
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{item.strMeal}</Text>
 
-        {/* Info section with category and area */}
-        <View style={styles.infoContainer}>
-          <View style={styles.categoryContainer}>
-            <Icon name="restaurant-outline" size={16} color="#666" />
-            <Text style={styles.kategori}>{item.strCategory}</Text>
-          </View>
-          <View style={styles.areaContainer}>
-            <Icon name="location-outline" size={16} color="#666" />
-            <Text style={styles.deskripsi}>{item.strArea}</Text>
+          <View style={styles.infoContainer}>
+            <View style={styles.categoryContainer}>
+              <Icon name="restaurant-outline" size={16} color="#666" />
+              <Text style={styles.kategori}>{item.strCategory}</Text>
+            </View>
+            <View style={styles.areaContainer}>
+              <Icon name="location-outline" size={16} color="#666" />
+              <Text style={styles.deskripsi}>{item.strArea}</Text>
+            </View>
           </View>
         </View>
+        <Icon name="chevron-forward" size={24} color="#666" />
       </View>
-      <Icon name="chevron-forward" size={24} color="#666" />
-    </TouchableOpacity>
+    </Link>
   );
 }
 

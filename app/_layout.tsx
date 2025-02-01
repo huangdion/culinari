@@ -32,7 +32,6 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Menyembunyikan rute yang tidak perlu */}
       {[
         "components/MenuCard",
         "components/SearchBar",
@@ -40,6 +39,7 @@ export default function TabLayout() {
         "detail/[id]",
         "menu/[category]",
         "components/MenuCardT",
+        "components/styles",
       ].map((route) => (
         <Tabs.Screen key={route} name={route} options={{ href: null }} />
       ))}
