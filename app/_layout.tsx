@@ -40,6 +40,7 @@ export default function TabLayout() {
         "menu/[category]",
         "components/MenuCardT",
         "components/styles",
+        "detail/notfound",
       ].map((route) => (
         <Tabs.Screen key={route} name={route} options={{ href: null }} />
       ))}

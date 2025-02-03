@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { View, FlatList, StyleSheet, Image } from "react-native";
+import { View, FlatList, StyleSheet, Image, Pressable } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, useFocusEffect } from "expo-router";
 import { Card, Text, IconButton, List } from "react-native-paper";
@@ -13,16 +13,28 @@ type Meal = {
 
 const BookmarkItem = ({ item, onRemove }: { item: Meal; onRemove: (id: string) => void }) => (
   <Card style={styles.mealItem}>
-    <Link href={`/detail/${item.idMeal}`} asChild>
-      <Card.Content style={styles.mealContainer}>
-        <Image source={{ uri: item.strMealThumb }} style={styles.mealImage} />
-        <View style={styles.mealInfo}>
-          <Text variant="titleMedium">{item.strMeal}</Text>
-          {item.strCategory && <Text variant="bodySmall" style={styles.categoryText}>{item.strCategory}</Text>}
-        </View>
-        <IconButton icon="trash-can-outline" iconColor="#FF6B6B" size={20} onPress={() => onRemove(item.idMeal)} />
-      </Card.Content>
-    </Link>
+    <Card.Content style={styles.mealContainer}>
+      <Link href={`/detail/${item.idMeal}`} asChild>
+        <Pressable style={styles.mealInfoContainer}>
+          <Image source={{ uri: item.strMealThumb }} style={styles.mealImage} />
+          <View style={styles.mealInfo}>
+            <Text variant="titleMedium">{item.strMeal}</Text>
+            {item.strCategory && (
+              <Text variant="bodySmall" style={styles.categoryText}>
+                {item.strCategory}
+              </Text>
+            )}
+          </View>
+        </Pressable>
+      </Link>
+      <IconButton
+        icon="trash-can-outline"
+        iconColor="#FF6B6B"
+        size={20}
+        onPress={() => onRemove(item.idMeal)}
+        style={styles.deleteButton}
+      />
+    </Card.Content>
   </Card>
 );
 
@@ -38,9 +50,11 @@ export default function Bookmarks() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => {
-    loadBookmarks();
-  }, [loadBookmarks]));
+  useFocusEffect(
+    useCallback(() => {
+      loadBookmarks();
+    }, [loadBookmarks])
+  );
 
   const handleRemove = useCallback(async (idMeal: string) => {
     try {
@@ -86,10 +100,20 @@ const styles = StyleSheet.create({
   mealItem: {
     marginBottom: 16,
     borderRadius: 12,
+    overflow: "hidden",
   },
   mealContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  mealInfoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    marginRight: 12, // Tambahkan margin kanan
   },
   mealImage: {
     width: 56,
@@ -99,9 +123,13 @@ const styles = StyleSheet.create({
   },
   mealInfo: {
     flex: 1,
+    marginRight: 8, // Tambahkan margin kanan
   },
   categoryText: {
     color: "#666666",
+  },
+  deleteButton: {
+    marginLeft: 'auto', // Dorong tombol ke kanan
   },
   emptyState: {
     flex: 1,

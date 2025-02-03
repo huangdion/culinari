@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,10 +8,13 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
+import { useRouter } from "expo-router";
+
+
 
 export default function MealDetail() {
   const { id } = useLocalSearchParams();
@@ -19,45 +22,48 @@ export default function MealDetail() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [ingredients, setIngredients] = useState([]);
 
+  const router = useRouter();
+
   useEffect(() => {
     const fetchMeal = async () => {
       try {
         const response = await axios.get(
           `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`
         );
-        const mealData = response.data.meals[0];
-        setMeal(mealData);
-
-        const ingredientList = [];
-        for (let i = 1; i <= 35; i++) {
-          const ingredient = mealData[`strIngredient${i}`];
-          const measure = mealData[`strMeasure${i}`];
-          if (ingredient && ingredient.trim() !== "") {
-            ingredientList.push({ ingredient, measure });
-          }
+        const mealData = response.data.meals ? response.data.meals[0] : null;
+  
+        if (!mealData) {
+          router.replace("/detail/notfound");
+          return;
         }
-        setIngredients(ingredientList);
+  
+        setMeal(mealData);
       } catch (error) {
         console.error("Error fetching meal details:", error);
         Alert.alert("Error", "Failed to load recipe details");
       }
     };
-
-    const checkBookmark = async () => {
-      try {
-        const bookmarks = await AsyncStorage.getItem("bookmarks");
-        if (bookmarks) {
-          const bookmarkedMeals = JSON.parse(bookmarks);
-          setIsBookmarked(bookmarkedMeals.some((meal) => meal.idMeal === id));
-        }
-      } catch (error) {
-        console.error("Error checking bookmark:", error);
-      }
-    };
-
+  
     fetchMeal();
-    checkBookmark();
   }, [id]);
+
+  const checkBookmark = useCallback(async () => {
+    try {
+      const bookmarks = await AsyncStorage.getItem("bookmarks");
+      if (bookmarks) {
+        const bookmarkedMeals = JSON.parse(bookmarks);
+        setIsBookmarked(bookmarkedMeals.some((meal) => meal.idMeal === id));
+      }
+    } catch (error) {
+      console.error("Error checking bookmark:", error);
+    }
+  }, [id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      checkBookmark();
+    }, [checkBookmark])
+  );
 
   const toggleBookmark = async () => {
     try {

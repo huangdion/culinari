@@ -1,21 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, FlatList, StyleSheet } from "react-native";
 import { Text, IconButton, ActivityIndicator } from "react-native-paper";
 import axios from "axios";
 import MenuCard from "./components/MenuCard";
 import SearchBar from "./components/SearchBar";
-import { router } from "expo-router";
+import { Link } from "expo-router";
 
 export default function Index() {
+  // State buat nyimpen teks pencarian
   const [searchText, setSearchText] = useState("");
-  const [filteredMenu, setFilteredMenu] = useState([]);
+  // State buat nyimpen semua menu yang didapat dari API
   const [menu, setMenu] = useState([]);
+  // State buat ngecek apakah data masih loading atau udah siap ditampilkan
   const [loading, setLoading] = useState(true);
 
+  // Ambil data saat komponen pertama kali muncul
   useEffect(() => {
     fetchRecipes();
   }, []);
 
+  // Fungsi buat ambil data resep dari API
   const fetchRecipes = async () => {
     try {
       const response = await axios.get(
@@ -29,41 +33,40 @@ export default function Index() {
     }
   };
 
-  const handleSearch = (text) => {
-    setSearchText(text);
-    setFilteredMenu(
-      text.trim()
-        ? menu.filter((item) =>
-            item.strMeal.toLowerCase().includes(text.toLowerCase())
-          )
-        : []
+  // Optimalkan filter menu pakai useMemo biar gak nge-render ulang terus
+  const filteredMenu = useMemo(() => {
+    if (!searchText.trim()) return menu;
+    return menu.filter((item) =>
+      item.strMeal.toLowerCase().includes(searchText.toLowerCase())
     );
-  };
-
-  const navigateToDetail = (id) => {
-    router.push({ pathname: "/detail/[id]", params: { id } });
-  };
+  }, [searchText, menu]);
 
   return (
     <View style={styles.container}>
+      {/* Komponen SearchBar buat input pencarian */}
       <SearchBar
         searchText={searchText}
-        onSearch={handleSearch}
-        onClear={() => handleSearch("")}
+        onSearch={setSearchText}
+        onClear={() => setSearchText("")}
       />
+
+      {/* Kalau masih loading, tampilin spinner */}
       {loading ? (
         <ActivityIndicator animating size="large" style={styles.loader} />
-      ) : searchText.length > 0 && filteredMenu.length === 0 ? (
-        <View style={styles.noResultsContainer}>
-          <IconButton icon="magnify" size={64} iconColor="#ccc" />
-          <Text style={styles.noResults}>No available recipe</Text>
-        </View>
       ) : (
         <FlatList
-          data={filteredMenu.length > 0 ? filteredMenu : menu}
+          data={filteredMenu}
           keyExtractor={(item) => item.idMeal}
           renderItem={({ item }) => (
-            <MenuCard item={item} navigateToDetail={navigateToDetail} />
+            <Link href={`/detail/${item.idMeal}`} asChild>
+              <MenuCard item={item} />
+            </Link>
+          )}
+          ListEmptyComponent={() => (
+            <View style={styles.noResultsContainer}>
+              <IconButton icon="magnify" size={64} iconColor="#ccc" />
+              <Text style={styles.noResults}>No available recipe</Text>
+            </View>
           )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.listContainer}
@@ -84,3 +87,4 @@ const styles = StyleSheet.create({
   },
   noResults: { fontSize: 16, color: "#666", marginTop: 16 },
 });
+
