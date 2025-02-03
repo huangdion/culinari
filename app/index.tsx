@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Image, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Meal = {
   idMeal: string;
@@ -19,35 +20,48 @@ export default function App() {
   const [menu, setMenu] = useState<Meal[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const fetchRecipes = async () => {
+  const fetchAndCacheRecipes = async () => {
     try {
-      const response = await axios.get(
-        "https://www.themealdb.com/api/json/v1/1/search.php?s="
-      );
-      if (response.data.meals) {
-        setMenu(response.data.meals);
-      }
-    } catch (error) {
-      console.error("Failed to fetch recipes:", error);
-    }
-  };
+      // Check if cached data exists and is recent
+      const cachedMeals = await AsyncStorage.getItem('cached_meals');
+      const cachedCategories = await AsyncStorage.getItem('cached_categories');
+      const lastFetchTime = await AsyncStorage.getItem('last_fetch_time');
 
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get(
-        "https://www.themealdb.com/api/json/v1/1/categories.php"
-      );
-      if (response.data.categories) {
-        setCategories(response.data.categories);
+      // Check if cache is less than 24 hours old
+      const isCacheValid = lastFetchTime && 
+        (Date.now() - parseInt(lastFetchTime, 10) < 24 * 60 * 60 * 1000);
+
+      if (cachedMeals && cachedCategories && isCacheValid) {
+        setMenu(JSON.parse(cachedMeals));
+        setCategories(JSON.parse(cachedCategories));
+        return;
       }
+
+      // Fetch from API if no cached data or cache is old
+      const [recipesResponse, categoriesResponse] = await Promise.all([
+        axios.get("https://www.themealdb.com/api/json/v1/1/search.php?s="),
+        axios.get("https://www.themealdb.com/api/json/v1/1/categories.php")
+      ]);
+
+      if (recipesResponse.data.meals) {
+        await AsyncStorage.setItem('cached_meals', JSON.stringify(recipesResponse.data.meals));
+        setMenu(recipesResponse.data.meals);
+      }
+
+      if (categoriesResponse.data.categories) {
+        await AsyncStorage.setItem('cached_categories', JSON.stringify(categoriesResponse.data.categories));
+        setCategories(categoriesResponse.data.categories);
+      }
+
+      // Update last fetch time
+      await AsyncStorage.setItem('last_fetch_time', Date.now().toString());
     } catch (error) {
-      console.error("Failed to fetch categories:", error);
+      console.error("Failed to fetch or cache recipes:", error);
     }
   };
 
   useEffect(() => {
-    fetchRecipes();
-    fetchCategories();
+    fetchAndCacheRecipes();
   }, []);
 
   return (
@@ -106,7 +120,6 @@ export default function App() {
   );
 }
 
-// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -178,7 +191,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   categoryItem: {
-    width: '32%', // Adjusted for better spacing
+    width: '32%',
     marginBottom: 15,
     borderRadius: 10,
     shadowColor: '#000',
@@ -202,4 +215,3 @@ const styles = StyleSheet.create({
     color: '#2C3E50',
   }
 });
-

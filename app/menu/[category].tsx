@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import MenuCard from "../components/MenuCardT";
 import axios from "axios";
 
@@ -14,6 +14,7 @@ type Meal = {
 
 export default function KategoriPage() {
   const { category } = useLocalSearchParams();
+  const router = useRouter();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,8 +27,11 @@ export default function KategoriPage() {
       const response = await axios.get(
         `https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`
       );
+
       if (response.data.meals) {
         setMeals(response.data.meals);
+      } else {
+        router.replace("/detail/notfound"); // Redirect if no meals found
       }
     } catch (error) {
       console.error(`Failed to fetch meals for category ${category}:`, error);

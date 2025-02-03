@@ -14,8 +14,6 @@ import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import { useRouter } from "expo-router";
 
-
-
 export default function MealDetail() {
   const { id } = useLocalSearchParams();
   const [meal, setMeal] = useState({});
@@ -25,6 +23,22 @@ export default function MealDetail() {
   const router = useRouter();
 
   useEffect(() => {
+    const extractIngredients = (mealData) => {
+      const ingredientList = [];
+      for (let i = 1; i <= 20; i++) {
+        const ingredient = mealData[`strIngredient${i}`];
+        const measure = mealData[`strMeasure${i}`];
+        
+        if (ingredient && ingredient.trim() !== '' && measure && measure.trim() !== '') {
+          ingredientList.push({ 
+            ingredient, 
+            measure 
+          });
+        }
+      }
+      return ingredientList;
+    };
+
     const fetchMeal = async () => {
       try {
         const response = await axios.get(
@@ -38,6 +52,7 @@ export default function MealDetail() {
         }
   
         setMeal(mealData);
+        setIngredients(extractIngredients(mealData));
       } catch (error) {
         console.error("Error fetching meal details:", error);
         Alert.alert("Error", "Failed to load recipe details");
